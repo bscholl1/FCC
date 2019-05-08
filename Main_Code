@@ -1,0 +1,267 @@
+Below is the code which I used in my project. 
+
+# Mount Google Drive
+
+from google.colab import drive
+drive.mount('/content/drive/')
+
+
+# Import/install
+
+!pip install geopandas
+!pip install matplotlib
+!pip install descartes
+!pip install shapely
+!pip install pandas
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Point, Polygon
+import pandas as pd
+#import cartopy.crs as ccrs
+#import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+
+
+
+# Load dataframe
+
+df = pd.read_csv('/content/drive/My Drive/tree-census/new_york_tree_census_2015.csv',encoding = 'ISO-8859-1')
+
+df.dropna(how='any')
+
+df.head()
+
+df.shape
+
+#df
+
+
+
+
+### DO NOT RUN, ONLY KEPT FOR THE RECORD
+
+# Iterate through df to find all different kinds of trees
+
+tree_list = []
+
+for idx, val in df.iterrows():
+  if val['spc_common'] not in tree_list:
+      tree_list.append(val['spc_common'])
+      
+      
+# df['spc_common'].unique()
+
+### DO RUN BELOW
+
+# Find all the kinds of trees
+
+trees = df['spc_common'].unique()
+
+tree_list = trees.tolist() 
+
+print(tree_list)
+
+
+
+# format the tree list into readable column of text
+
+i = 0
+for entry in tree_list:
+  print(entry)
+  i += 1
+
+
+
+
+# Convert list elements to string values
+
+string_tree_list = []
+
+for element in tree_list:
+    string_tree_list.append(str(element))
+    
+i = 0
+for entry in string_tree_list:
+  print(entry)
+  i += 1
+  
+  
+
+# alphabetize the list
+
+master_name_list = sorted(string_tree_list, key=str.lower)
+
+i = 0
+for entry in master_name_list:
+  print(entry)
+  i += 1
+  
+
+
+# User input to select trees
+# Categories: burough, type of tree, health, problems
+
+# Code for type of tree
+
+print("Here is a list of trees in New York. Except for nan. That's not a tree.")
+
+i = 0
+for entry in master_name_list:
+  print(entry)
+  i += 1
+
+
+tree_name = input('From the above list of trees, which kind of tree would you like to live next to? Please enter the name exactly as it appears. ')
+
+print("The tree you have selected is", tree_name, ".")
+
+
+
+
+# Code for burough
+
+borough = input("Please select a borough of NYC from Queens, Staten Island, Manhattan, Bronx, and Brooklyn. Please select exactly from this list.")
+
+print("The borough you selected is", borough, ".")
+
+
+
+# SKIP THIS CELL
+# Iterate for health values
+
+health_list = []
+
+for idx, val in df.iterrows():
+  if val['health'] not in health_list:
+      health_list.append(val['health'])
+      
+print(health_list)
+
+
+
+# Code for health
+
+health_level = input("Please select a tree health level from Good, Fair, and Poor. Please type exactly one of these.")
+
+print("You have chosen", health_level, ".")
+
+
+
+# New dataframe from type of tree
+
+
+samples = df['spc_common'] == tree_name
+
+samples
+
+df_subset = df[samples]
+
+df = df_subset
+
+df
+
+
+
+# New dataframe from borough
+
+samples = df['boroname'] == borough
+
+samples
+
+df_subset = df[samples]
+
+df = df_subset
+
+df
+
+
+
+# New dataframe from health
+
+samples = df['health'] == health_level
+
+samples
+
+df_subset = df[samples]
+
+df = df_subset
+
+df
+
+
+
+# Create a geodataframe
+
+gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.longitude, df.latitude))   # turns dataframe into geodataframe
+
+gdf.head()
+
+
+
+# Plot data
+
+borough_map = gpd.read_file('/content/drive/My Drive/Borough Boundaries/geo_export_3354012b-d027-4073-9d51-9060e754e5df.shp')
+fig,ax = plt.subplots(figsize = (15,15))
+
+borough_map.plot(ax = ax)
+
+gdf.plot(ax=ax, color='red')
+
+plt.show()
+
+
+
+
+# Pick a random tree from above for inspection, output longitude and latitude
+
+df_rand = df.sample(1) # selects random row
+
+#df_rand
+
+
+long = float(df_rand["longitude"])
+lat = float(df_rand["latitude"])
+
+
+print("latitude: ", lat)
+print("longtitude: ", long)
+
+#type(long)
+
+df_rand
+
+
+
+# Generate a picture of the tree's general location & a map of the surrounding area
+
+# Example: https://maps.googleapis.com/maps/api/streetview?size=600x300&location=46.414382,10.013988&heading=151.78&pitch=-0.76&key=YOUR_API_KEY&signature=YOUR_SIGNATURE
+
+pic_string = "https://maps.googleapis.com/maps/api/streetview?size=600x300&location="
+
+map_string = "https://www.google.com/maps/@"
+
+string1 = str(lat)
+#print(string1)
+string2 = ","
+#print(string2)
+string3 = str(long)
+#print(string3)
+string4 = "&key=AIzaSyBuqlr030Z5zvHghjktPZ7_P3BLAll6eTU"
+#print(string4)
+string5 = ",15z"
+
+
+final_pic = pic_string+string1+string2+string3+string4
+
+
+final_map = map_string+string1+string2+string3+string5
+
+print("Link to image of tree location:", final_pic)
+
+print("Link to map of tree location:", final_map)
+
+
+# https://www.google.com/maps/@50.7008939,-86.23801,10z 
+
+
